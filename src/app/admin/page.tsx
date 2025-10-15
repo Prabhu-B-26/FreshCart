@@ -23,23 +23,29 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/context/auth-provider';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
+  const { isAdmin, user, loading: authLoading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      const fetchedProducts = await getProducts();
-      setProducts(fetchedProducts);
-      setLoading(false);
-    };
-    fetchProducts();
-  }, []);
+    if (!authLoading && !isAdmin) {
+        toast({ variant: 'destructive', title: 'Unauthorized', description: 'You do not have access to this page.' });
+        router.push('/');
+    } else if (!authLoading && user) {
+        const fetchProducts = async () => {
+          setLoading(true);
+          const fetchedProducts = await getProducts();
+          setProducts(fetchedProducts);
+          setLoading(false);
+        };
+        fetchProducts();
+    }
+  }, [isAdmin, authLoading, router, toast, user]);
 
   const forceRerender = async () => {
       setLoading(true);
@@ -59,8 +65,12 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return <p>Loading...</p>;
+  }
+  
+  if (!isAdmin) {
+      return null;
   }
 
   return (

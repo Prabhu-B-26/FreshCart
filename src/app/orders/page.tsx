@@ -23,13 +23,14 @@ export default function OrdersPage() {
                 const userOrders = await getOrdersForUser(user.uid);
                 setOrders(userOrders);
                 setLoading(false);
-            } else {
+            } else if (!authLoading) {
+                // If auth is done loading and there's no user, stop loading.
                 setOrders([]);
                 setLoading(false);
             }
         };
         fetchOrders();
-    }, [user]);
+    }, [user, authLoading]);
 
     if (authLoading || loading) {
         return <OrdersSkeleton />;
@@ -46,10 +47,10 @@ export default function OrdersPage() {
                 <div className="space-y-6">
                     {orders.map(order => (
                         <Card key={order.id}>
-                            <CardHeader className="flex flex-row justify-between items-start">
+                            <CardHeader className="flex flex-row justify-between items-start flex-wrap gap-2">
                                 <div>
                                     <CardTitle>Order #{order.id.slice(0, 7)}</CardTitle>
-                                    <CardDescription>{(order.createdAt as Date).toLocaleDateString()}</CardDescription>
+                                    <CardDescription>{order.createdAt.toLocaleDateString()}</CardDescription>
                                 </div>
                                 <Badge variant='secondary'>Processing</Badge>
                             </CardHeader>

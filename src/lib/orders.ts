@@ -17,7 +17,7 @@ export async function createOrder(userId: string, orderData: Omit<Order, 'id' | 
 
 export async function getOrdersForUser(userId: string): Promise<Order[]> {
     await new Promise(resolve => setTimeout(resolve, 50));
-    return memoryOrders.filter(o => o.userId === userId).sort((a, b) => (b.createdAt as Date).getTime() - (a.createdAt as Date).getTime());
+    return memoryOrders.filter(o => o.userId === userId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function getOrderById(userId: string, orderId: string): Promise<Order | null> {

@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Search } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { getProducts } from '@/lib/products';
@@ -42,7 +43,6 @@ export default function ProductList() {
                     placeholder="Search for products..."
                     className="w-full max-w-lg pl-10"
                     disabled
-                    value=""
                   />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -68,7 +68,9 @@ export default function ProductList() {
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <Link key={product.id} href={`/product/${product.id}`} className="flex">
+                <ProductCard product={product} />
+            </Link>
           ))}
         </div>
       ) : (

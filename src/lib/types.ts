@@ -1,4 +1,3 @@
-import { Timestamp } from "firebase/firestore";
 
 export type Product = {
   id: string;
@@ -31,5 +30,5 @@ export type Order = {
   userEmail: string | null;
   items: OrderItem[];
   total: number;
-  createdAt: Timestamp | Date;
+  createdAt: Date;
 };

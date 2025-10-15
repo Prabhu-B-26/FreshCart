@@ -2,7 +2,6 @@
 "use client";
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Home, ShoppingCart, ClipboardList, LogOut, Menu, ShieldCheck, LogIn } from 'lucide-react';
 import React from 'react';
 
@@ -22,20 +21,14 @@ import Logo from '@/components/shared/logo';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 
 export default function Navbar() {
-  const { user, isAdmin, loading, login, logout } = useAuth();
+  const { user, isAdmin, loading, logout } = useAuth();
   const { cartCount } = useCart();
+  const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-
-  const handleLogout = async () => {
-    logout();
-  };
-
-  const handleLogin = () => {
-    login(true); // Log in as admin
-  }
 
   const navLinks = [
     { href: '/', label: 'Home', icon: Home, public: true },
@@ -123,14 +116,14 @@ export default function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuItem onClick={() => logout()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={handleLogin} size="sm">
+              <Button onClick={() => router.push('/login')} size="sm">
                 <LogIn className="mr-2 h-4 w-4" />
                 Login
               </Button>

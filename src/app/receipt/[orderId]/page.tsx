@@ -45,7 +45,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
     doc.setFontSize(12);
     doc.text(`Order ID: ${order.id}`, 20, 30);
     doc.text(`User: ${user.displayName || user.email}`, 20, 36);
-    doc.text(`Date: ${(order.createdAt as Date).toLocaleString()}`, 20, 42);
+    doc.text(`Date: ${order.createdAt.toLocaleString()}`, 20, 42);
     
     autoTable(doc, {
         startY: 50,
