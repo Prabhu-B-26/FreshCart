@@ -1,20 +1,29 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { Product } from '@/lib/types';
 import { getPersonalizedRecommendations } from '@/ai/flows/personalized-product-recommendations';
 import { useAuth } from '@/context/auth-provider';
-import { getProducts } from '@/lib/products';
 import ProductCard from './product-card';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function RecommendedProducts() {
   const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const firestore = useFirestore();
+
+  const productsCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'products');
+  }, [firestore]);
+
+  const { data: allProducts } = useCollection<Product>(productsCollection);
 
   useEffect(() => {
     async function fetchRecommendations() {
-      if (!user) {
+      if (!user || !allProducts) {
         setLoading(false);
         return;
       }
@@ -32,7 +41,6 @@ export default function RecommendedProducts() {
         };
         
         const result = await getPersonalizedRecommendations(recommendationInput);
-        const allProducts = await getProducts();
 
         const recommendedProducts = allProducts.filter(p => result.recommendedProducts.includes(p.id));
         
@@ -45,7 +53,7 @@ export default function RecommendedProducts() {
     }
 
     fetchRecommendations();
-  }, [user]);
+  }, [user, allProducts]);
   
   // This is a placeholder effect to track browsing history.
   // In a real app, this would be triggered on product detail pages.
@@ -57,7 +65,7 @@ export default function RecommendedProducts() {
   },[])
 
 
-  if (loading || recommendations.length === 0) {
+  if (loading || recommendations.length === 0 || !user) {
     return null; // The suspense fallback in page.tsx will handle loading state
   }
 

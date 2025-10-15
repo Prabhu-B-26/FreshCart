@@ -7,26 +7,28 @@ import ProductForm from '@/components/product/product-form';
 import { useAuth } from '@/context/auth-provider';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useFirestore } from '@/firebase';
 
 export default function AddProductPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { loading, user } = useAuth();
+  const { loading, user, isAdmin } = useAuth();
+  const firestore = useFirestore();
 
   const handleSubmit = async (data: any) => {
+    if (!firestore) return;
     try {
-      await addProduct({ ...data, imageHint: data.name.toLowerCase() }); // Add basic imageHint
+      await addProduct(firestore, { ...data, imageHint: data.name.toLowerCase() });
       toast({ title: 'Success', description: 'Product added successfully.' });
-      router.push('/');
+      router.push('/admin');
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to add product.' });
     }
   };
   
   if (loading) return <p>Loading...</p>
-  if (!user) {
-      // router.push('/'); // this causes infinite loop
-      return <p className="text-center p-8">Access Denied. You must be logged in to view this page.</p>
+  if (!user || !isAdmin) {
+      return <p className="text-center p-8">Access Denied. You must be an admin to view this page.</p>
   }
 
   return (

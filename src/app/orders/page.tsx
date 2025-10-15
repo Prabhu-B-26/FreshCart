@@ -1,41 +1,43 @@
 "use client";
 
+import { useMemo } from 'react';
 import { useAuth } from "@/context/auth-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ClipboardList } from "lucide-react";
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, orderBy, query, Timestamp } from 'firebase/firestore';
+import type { Order } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Mock data as we don't have a real orders backend
-const mockOrders = [
-    {
-        id: 'mock-order-1678886400000',
-        createdAt: new Date('2023-03-15T12:00:00Z'),
-        total: 25.50,
-        status: 'Delivered',
-        items: [
-            { name: 'Fresh Apples', quantity: 2 },
-            { name: 'Whole Wheat Bread', quantity: 1 },
-        ]
-    },
-    {
-        id: 'mock-order-1678972800000',
-        createdAt: new Date('2023-03-16T15:30:00Z'),
-        total: 12.75,
-        status: 'Processing',
-        items: [
-            { name: 'Organic Spinach', quantity: 1 },
-            { name: 'Spaghetti Pasta', quantity: 3 },
-        ]
-    }
-];
-
+type OrderWithDate = Omit<Order, 'createdAt'> & {
+    createdAt: Date;
+}
 
 export default function OrdersPage() {
     const { user, loading } = useAuth();
+    const firestore = useFirestore();
 
-    if (loading) {
-        return <p>Loading orders...</p>
+    const ordersQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, 'users', user.uid, 'orders'), orderBy('createdAt', 'desc'));
+    }, [user, firestore]);
+
+    const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
+
+    const typedOrders = useMemo(() => {
+        return orders?.map(order => {
+            const fbTimestamp = order.createdAt as unknown as Timestamp;
+            return {
+                ...order,
+                createdAt: fbTimestamp?.toDate() ?? new Date(),
+            } as OrderWithDate;
+        }) ?? [];
+    }, [orders]);
+
+    if (loading || ordersLoading) {
+        return <OrdersSkeleton />;
     }
 
     if (!user) {
@@ -45,20 +47,17 @@ export default function OrdersPage() {
     return (
         <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-headline font-bold mb-8">Your Orders</h1>
-            {mockOrders.length > 0 ? (
+            {typedOrders.length > 0 ? (
                 <div className="space-y-6">
-                    {mockOrders.map(order => (
+                    {typedOrders.map(order => (
                         <Card key={order.id}>
                             <CardHeader className="flex flex-row justify-between items-start">
                                 <div>
-                                    <CardTitle>Order #{order.id.split('-')[2]}</CardTitle>
+                                    <CardTitle>Order #{order.id.slice(0, 7)}</CardTitle>
                                     <CardDescription>{order.createdAt.toLocaleDateString()}</CardDescription>
                                 </div>
-                                <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'}
-                                   className={order.status === 'Delivered' ? 'bg-green-100 text-green-800' : ''}
-                                >
-                                    {order.status}
-                                </Badge>
+                                {/* In a real app, status would come from the order data */}
+                                <Badge variant='secondary'>Processing</Badge>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
@@ -82,6 +81,38 @@ export default function OrdersPage() {
                     <p className="mt-1 text-muted-foreground">You haven't placed any orders with us yet.</p>
                 </div>
             )}
+        </div>
+    )
+}
+
+function OrdersSkeleton() {
+    return (
+        <div className="max-w-4xl mx-auto">
+            <Skeleton className="h-10 w-48 mb-8" />
+            <div className="space-y-6">
+                {[...Array(2)].map((_, i) => (
+                    <Card key={i}>
+                        <CardHeader className="flex flex-row justify-between items-start">
+                            <div>
+                                <Skeleton className="h-7 w-40" />
+                                <Skeleton className="h-4 w-24 mt-2" />
+                            </div>
+                             <Skeleton className="h-6 w-20" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-full" />
+                            </div>
+                            <Separator className="my-4" />
+                            <div className="flex justify-between font-semibold">
+                                <Skeleton className="h-6 w-16" />
+                                <Skeleton className="h-6 w-24" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
     )
 }

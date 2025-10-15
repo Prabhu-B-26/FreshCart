@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, ShoppingCart, ClipboardList, PlusCircle, LogOut, Menu } from 'lucide-react';
+import { Home, ShoppingCart, ClipboardList, LogOut, Menu, ShieldCheck } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import React from 'react';
 
-import { useAuth } from '@/context/auth-provider';
+import { useAuth as useAppAuth } from '@/context/auth-provider';
 import { useCart } from '@/context/cart-provider';
 import { useAuth as useFirebaseAuth } from "@/firebase";
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ import { Skeleton } from '../ui/skeleton';
 
 
 export default function Navbar() {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAppAuth();
   const { cartCount } = useCart();
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -40,11 +40,12 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home', icon: Home, public: true },
     { href: '/orders', label: 'Orders', icon: ClipboardList, auth: true },
-    { href: '/admin/add-product', label: 'Add Product', icon: PlusCircle, auth: true },
+    { href: '/admin', label: 'Admin', icon: ShieldCheck, admin: true },
   ];
 
   const filteredLinks = navLinks.filter(link => {
     if (link.public) return true;
+    if (link.admin) return !!user && isAdmin;
     if (link.auth) return !!user;
     return false;
   });

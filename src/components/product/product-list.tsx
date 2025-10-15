@@ -1,23 +1,38 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import ProductCard from './product-card';
 import { Input } from '@/components/ui/input';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-interface ProductListProps {
-  products: Product[];
-}
-
-export default function ProductList({ products }: ProductListProps) {
+export default function ProductList() {
   const [searchTerm, setSearchTerm] = useState('');
+  const firestore = useFirestore();
+
+  const productsCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'products');
+  }, [firestore]);
+
+  const { data: products, isLoading } = useCollection<Product>(productsCollection);
 
   const filteredProducts = useMemo(() => {
+    if (!products) return [];
     return products.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [products, searchTerm]);
+
+  if (isLoading) {
+      return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+      )
+  }
 
   return (
     <div className="space-y-8">
@@ -45,4 +60,17 @@ export default function ProductList({ products }: ProductListProps) {
       )}
     </div>
   );
+}
+
+import { Skeleton } from "@/components/ui/skeleton";
+
+function SkeletonCard() {
+    return (
+        <div className="space-y-2">
+            <Skeleton className="h-56 w-full" />
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+        </div>
+    );
 }

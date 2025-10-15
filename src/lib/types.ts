@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export type Product = {
   id: string;
   name: string;
@@ -20,7 +22,7 @@ export type Order = {
   id: string;
   userId: string;
   userEmail: string | null;
-  items: CartItem[];
+  items: Omit<CartItem, 'imageHint'>[];
   total: number;
-  createdAt: number;
+  createdAt: Timestamp | Date;
 };

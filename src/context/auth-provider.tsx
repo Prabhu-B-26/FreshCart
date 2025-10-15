@@ -1,24 +1,39 @@
 "use client";
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from 'firebase/auth';
-import { useUser } from '@/firebase';
+import { useUser as useFirebaseUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// Set admin email from environment variables
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
 interface AuthContextType {
   user: User | null;
+  isAdmin: boolean;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  isAdmin: false,
   loading: true,
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading, userError } = useUser();
+  const { user, isUserLoading, userError } = useFirebaseUser();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      // Check if the logged-in user's email matches the admin email
+      setIsAdmin(user.email === ADMIN_EMAIL);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   if (isUserLoading) {
     return (
@@ -42,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const value = { user, loading: isUserLoading };
+  const value = { user, isAdmin, loading: isUserLoading };
 
   return (
     <AuthContext.Provider value={value}>

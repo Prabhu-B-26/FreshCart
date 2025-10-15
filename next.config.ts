@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config) => {
+    config.externals.push(
+      'sharp'
+    );
+    return config;
+  }
 };
 
 export default nextConfig;

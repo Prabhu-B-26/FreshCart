@@ -19,8 +19,10 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useFirestore } from "@/firebase";
+import { createOrder } from "@/lib/orders";
 
 const formSchema = z.object({
   cardholderName: z.string().min(2, { message: "Name is too short." }),
@@ -35,6 +37,7 @@ export default function PaymentPage() {
   const { cartItems, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,49 +51,72 @@ export default function PaymentPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    if (!user) {
+    if (!user || !firestore) {
       toast({ variant: "destructive", title: "You must be logged in to place an order." });
       setIsLoading(false);
       return;
     }
 
-    // Simulate payment processing and order saving
-    setTimeout(async () => {
-      try {
-        // In a real app, you would save the order to Firestore here.
-        const orderId = `mock-order-${Date.now()}`;
-        console.log("Order placed:", {
-          orderId,
-          userId: user.uid,
-          userEmail: user.email,
-          items: cartItems,
-          total: totalPrice,
-          createdAt: Date.now(),
-        });
-        
-        clearCart();
-        toast({ title: "Payment Successful!", description: "Your order has been placed." });
-        router.push(`/receipt/${orderId}`);
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Order failed",
-          description: "Something went wrong. Please try again.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }, 2000); // 2-second delay to simulate network request
+    try {
+      const orderId = await createOrder(firestore, user.uid, {
+        userEmail: user.email,
+        items: cartItems.map(({imageHint, ...item}) => item), // Don't store imageHint in order
+        total: totalPrice
+      });
+      
+      clearCart();
+      toast({ title: "Payment Successful!", description: "Your order has been placed." });
+      router.push(`/receipt/${orderId}`);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Order failed",
+        description: "Something went wrong. Please try again.",
+      });
+      setIsLoading(false);
+    }
+    // No finally block to set isLoading false, as we navigate away on success
   }
   
   if (!user) {
     // This is a fallback. A protected route HOC or middleware is better.
     return <div className="text-center p-8">Please log in to proceed with payment.</div>
   }
+  
+  if(cartItems.length === 0) {
+      return (
+          <div className="text-center p-8">
+              <p>Your cart is empty. Add items before proceeding to payment.</p>
+              <Button onClick={() => router.push('/')} className="mt-4">Go Shopping</Button>
+          </div>
+      )
+  }
+
 
   return (
     <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-      <div>
+      <div className="md:order-2">
+        <h2 className="text-2xl font-headline font-bold mb-4">Order Summary</h2>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            {cartItems.map(item => (
+              <div key={item.id} className="flex justify-between items-start">
+                <div>
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                </div>
+                <p className="font-medium text-right">${(item.price * item.quantity).toFixed(2)}</p>
+              </div>
+            ))}
+            <Separator />
+            <div className="flex justify-between font-bold text-lg">
+              <p>Total</p>
+              <p>${totalPrice.toFixed(2)}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="md:order-1">
         <h1 className="text-3xl font-headline font-bold mb-4">Payment Details</h1>
         <p className="text-muted-foreground mb-8">Enter your payment information to complete the purchase.</p>
         <Card>
@@ -154,32 +180,11 @@ export default function PaymentPage() {
                     )}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 mt-4" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 mt-4" disabled={isLoading || cartItems.length === 0}>
                   {isLoading ? "Processing..." : `Pay $${totalPrice.toFixed(2)}`}
                 </Button>
               </form>
             </Form>
-          </CardContent>
-        </Card>
-      </div>
-      <div>
-        <h2 className="text-2xl font-headline font-bold mb-4">Order Summary</h2>
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            {cartItems.map(item => (
-              <div key={item.id} className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                </div>
-                <p className="font-medium text-right">${(item.price * item.quantity).toFixed(2)}</p>
-              </div>
-            ))}
-            <Separator />
-            <div className="flex justify-between font-bold text-lg">
-              <p>Total</p>
-              <p>${totalPrice.toFixed(2)}</p>
-            </div>
           </CardContent>
         </Card>
       </div>
