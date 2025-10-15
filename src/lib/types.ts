@@ -18,11 +18,18 @@ export type CartItem = {
   imageHint: string;
 };
 
+export type OrderItem = {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+}
+
 export type Order = {
   id: string;
   userId: string;
   userEmail: string | null;
-  items: Omit<CartItem, 'imageHint'>[];
+  items: OrderItem[];
   total: number;
   createdAt: Timestamp | Date;
 };

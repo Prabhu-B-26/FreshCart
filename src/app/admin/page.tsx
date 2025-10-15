@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-provider';
 import { collection, deleteDoc, doc } from 'firebase/firestore';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const productsCollection = useMemo(() => {
+  const productsCollection = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'products');
   }, [firestore]);

@@ -28,8 +28,19 @@ export default function ProductList() {
 
   if (isLoading) {
       return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+          <div className="space-y-8">
+              <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search for products..."
+                    className="w-full max-w-lg pl-10"
+                    disabled
+                  />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+              </div>
           </div>
       )
   }

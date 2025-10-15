@@ -6,28 +6,32 @@ import { getPersonalizedRecommendations } from '@/ai/flows/personalized-product-
 import { useAuth } from '@/context/auth-provider';
 import ProductCard from './product-card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function RecommendedProducts() {
   const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const firestore = useFirestore();
+  
+  // This is a placeholder effect to track browsing history.
+  // In a real app, this would be triggered on product detail pages.
+  useEffect(() => {
+    const history = JSON.parse(localStorage.getItem('browsingHistory') || '[]');
+    if (history.length === 0) {
+        localStorage.setItem('browsingHistory', JSON.stringify(['eggs', 'cheese']));
+    }
+  },[])
 
-  const productsCollection = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'products');
-  }, [firestore]);
-
-  const { data: allProducts } = useCollection<Product>(productsCollection);
 
   useEffect(() => {
     async function fetchRecommendations() {
-      if (!user || !allProducts) {
+      if (!user || !firestore) {
         setLoading(false);
         return;
       }
       
+      setLoading(true);
       try {
         // In a real app, fetch purchase history from user's orders in Firestore
         const purchaseHistory: string[] = ['milk', 'bread']; 
@@ -41,10 +45,15 @@ export default function RecommendedProducts() {
         };
         
         const result = await getPersonalizedRecommendations(recommendationInput);
-
-        const recommendedProducts = allProducts.filter(p => result.recommendedProducts.includes(p.id));
         
-        setRecommendations(recommendedProducts.slice(0, 4)); // Limit to 4 recommendations
+        if (result.recommendedProducts.length > 0) {
+            const productsRef = collection(firestore, 'products');
+            const q = query(productsRef, where('id', 'in', result.recommendedProducts.slice(0, 10)));
+            const querySnapshot = await getDocs(q);
+            const recommendedProducts = querySnapshot.docs.map(doc => doc.data() as Product);
+            setRecommendations(recommendedProducts.slice(0, 4));
+        }
+
       } catch (error) {
         console.error("Failed to get recommendations:", error);
       } finally {
@@ -53,17 +62,7 @@ export default function RecommendedProducts() {
     }
 
     fetchRecommendations();
-  }, [user, allProducts]);
-  
-  // This is a placeholder effect to track browsing history.
-  // In a real app, this would be triggered on product detail pages.
-  useEffect(() => {
-    const history = JSON.parse(localStorage.getItem('browsingHistory') || '[]');
-    if (history.length === 0) {
-        localStorage.setItem('browsingHistory', JSON.stringify(['eggs', 'cheese']));
-    }
-  },[])
-
+  }, [user, firestore]);
 
   if (loading || recommendations.length === 0 || !user) {
     return null; // The suspense fallback in page.tsx will handle loading state
