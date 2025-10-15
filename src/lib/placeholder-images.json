@@ -1,3 +1,76 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "apple",
+      "description": "Fresh red apples",
+      "imageUrl": "https://picsum.photos/seed/apple/400/300",
+      "imageHint": "apple fruit"
+    },
+    {
+      "id": "banana",
+      "description": "Ripe yellow bananas",
+      "imageUrl": "https://picsum.photos/seed/banana/400/300",
+      "imageHint": "banana fruit"
+    },
+    {
+      "id": "bread",
+      "description": "Whole wheat bread",
+      "imageUrl": "https://picsum.photos/seed/bread/400/300",
+      "imageHint": "bread loaf"
+    },
+    {
+      "id": "milk",
+      "description": "Fresh dairy milk",
+      "imageUrl": "https://picsum.photos/seed/milk/400/300",
+      "imageHint": "milk carton"
+    },
+    {
+      "id": "eggs",
+      "description": "Farm fresh eggs",
+      "imageUrl": "https://picsum.photos/seed/eggs/400/300",
+      "imageHint": "eggs carton"
+    },
+    {
+      "id": "chicken",
+      "description": "Raw chicken breast",
+      "imageUrl": "https://picsum.photos/seed/chicken/400/300",
+      "imageHint": "chicken meat"
+    },
+    {
+      "id": "spinach",
+      "description": "Organic baby spinach",
+      "imageUrl": "https://picsum.photos/seed/spinach/400/300",
+      "imageHint": "spinach vegetable"
+    },
+    {
+      "id": "tomato",
+      "description": "Vine-ripened tomatoes",
+      "imageUrl": "https://picsum.photos/seed/tomato/400/300",
+      "imageHint": "tomato vegetable"
+    },
+    {
+      "id": "cheese",
+      "description": "Cheddar cheese block",
+      "imageUrl": "https://picsum.photos/seed/cheese/400/300",
+      "imageHint": "cheese block"
+    },
+    {
+      "id": "pasta",
+      "description": "Dried spaghetti pasta",
+      "imageUrl": "https://picsum.photos/seed/pasta/400/300",
+      "imageHint": "pasta dry"
+    },
+    {
+      "id": "coffee",
+      "description": "Whole bean coffee",
+      "imageUrl": "https://picsum.photos/seed/coffee/400/300",
+      "imageHint": "coffee beans"
+    },
+    {
+      "id": "orange-juice",
+      "description": "Pulp-free orange juice",
+      "imageUrl": "https://picsum.photos/seed/juice/400/300",
+      "imageHint": "orange juice"
+    }
+  ]
 }
