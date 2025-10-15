@@ -8,7 +8,7 @@ import React from 'react';
 
 import { useAuth } from '@/context/auth-provider';
 import { useCart } from '@/context/cart-provider';
-import { auth } from '@/lib/firebase';
+import { useAuth as useFirebaseAuth } from "@/firebase";
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Logo from '@/components/shared/logo';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '../ui/skeleton';
 
 
 export default function Navbar() {
@@ -29,6 +30,7 @@ export default function Navbar() {
   const { cartCount } = useCart();
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const auth = useFirebaseAuth();
 
   const handleLogout = async () => {
     await signOut(auth);

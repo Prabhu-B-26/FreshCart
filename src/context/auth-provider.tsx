@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import React, { createContext, useContext } from 'react';
+import type { User } from 'firebase/auth';
+import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface AuthContextType {
@@ -18,21 +18,9 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isUserLoading, userError } = useUser();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const value = { user, loading };
-
-  if (loading) {
+  if (isUserLoading) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -45,6 +33,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
+
+  if (userError) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <p>Error loading user: {userError.message}</p>
+      </div>
+    )
+  }
+
+  const value = { user, loading: isUserLoading };
 
   return (
     <AuthContext.Provider value={value}>

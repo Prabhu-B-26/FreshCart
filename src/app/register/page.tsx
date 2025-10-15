@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { auth } from "@/lib/firebase";
+import { useAuth as useFirebaseAuth } from "@/firebase";
 import AuthLayout from "@/components/auth/auth-layout";
 
 const formSchema = z.object({
@@ -36,6 +36,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const auth = useFirebaseAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
