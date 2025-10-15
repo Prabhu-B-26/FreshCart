@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ interface ProductFormProps {
 export default function ProductForm({ initialData, onSubmit }: ProductFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   
-  const defaultImageUrl = initialData?.imageUrl || `https://picsum.photos/seed/${initialData?.name || 'new'}/400/300`;
+  const defaultImageUrl = initialData?.imageUrl || `https://picsum.photos/seed/${Math.random()}/400/300`;
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
@@ -66,8 +67,8 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-1">
-                <FormLabel>Product Image</FormLabel>
-                <div className="mt-2 aspect-square w-full border-2 border-dashed rounded-lg flex items-center justify-center relative overflow-hidden">
+                <FormLabel>Product Image Preview</FormLabel>
+                <div className="mt-2 aspect-square w-full border-2 border-dashed rounded-lg flex items-center justify-center relative overflow-hidden bg-muted">
                     {imageUrlValue ? (
                         <Image src={imageUrlValue} alt="Product image preview" fill className="object-cover" />
                     ) : (

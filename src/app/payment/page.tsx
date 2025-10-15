@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -21,7 +22,6 @@ import { useCart } from "@/context/cart-provider";
 import { useAuth } from "@/context/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useFirestore } from "@/firebase";
 import { createOrder } from "@/lib/orders";
 
 const formSchema = z.object({
@@ -37,7 +37,6 @@ export default function PaymentPage() {
   const { cartItems, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,14 +50,14 @@ export default function PaymentPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    if (!user || !firestore) {
+    if (!user) {
       toast({ variant: "destructive", title: "You must be logged in to place an order." });
       setIsLoading(false);
       return;
     }
 
     try {
-      const orderId = await createOrder(firestore, user.uid, {
+      const orderId = await createOrder(user.uid, {
         userEmail: user.email,
         items: cartItems.map(({imageHint, ...item}) => item), // Don't store imageHint in order
         total: totalPrice
@@ -75,12 +74,15 @@ export default function PaymentPage() {
       });
       setIsLoading(false);
     }
-    // No finally block to set isLoading false, as we navigate away on success
   }
   
   if (!user) {
-    // This is a fallback. A protected route HOC or middleware is better.
-    return <div className="text-center p-8">Please log in to proceed with payment.</div>
+    return (
+      <div className="text-center p-8">
+        <p>This is a demo. Please "log in" from the navbar to proceed.</p>
+        <Button onClick={() => router.push('/')} className="mt-4">Go Home</Button>
+      </div>
+    )
   }
   
   if(cartItems.length === 0) {
@@ -91,7 +93,6 @@ export default function PaymentPage() {
           </div>
       )
   }
-
 
   return (
     <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">

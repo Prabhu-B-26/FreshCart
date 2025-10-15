@@ -1,42 +1,37 @@
+
 "use client";
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from "@/context/auth-provider";
+import { getOrdersForUser } from '@/lib/orders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ClipboardList } from "lucide-react";
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, orderBy, query, Timestamp } from 'firebase/firestore';
 import type { Order } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type OrderWithDate = Omit<Order, 'createdAt'> & {
-    createdAt: Date;
-}
-
 export default function OrdersPage() {
-    const { user, loading } = useAuth();
-    const firestore = useFirestore();
+    const { user, loading: authLoading } = useAuth();
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const ordersQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, 'users', user.uid, 'orders'), orderBy('createdAt', 'desc'));
-    }, [user, firestore]);
+    useEffect(() => {
+        const fetchOrders = async () => {
+            if (user) {
+                setLoading(true);
+                const userOrders = await getOrdersForUser(user.uid);
+                setOrders(userOrders);
+                setLoading(false);
+            } else {
+                setOrders([]);
+                setLoading(false);
+            }
+        };
+        fetchOrders();
+    }, [user]);
 
-    const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
-
-    const typedOrders = useMemo(() => {
-        return orders?.map(order => {
-            const fbTimestamp = order.createdAt as unknown as Timestamp;
-            return {
-                ...order,
-                createdAt: fbTimestamp?.toDate() ?? new Date(),
-            } as OrderWithDate;
-        }) ?? [];
-    }, [orders]);
-
-    if (loading || ordersLoading) {
+    if (authLoading || loading) {
         return <OrdersSkeleton />;
     }
 
@@ -47,16 +42,15 @@ export default function OrdersPage() {
     return (
         <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-headline font-bold mb-8">Your Orders</h1>
-            {typedOrders.length > 0 ? (
+            {orders.length > 0 ? (
                 <div className="space-y-6">
-                    {typedOrders.map(order => (
+                    {orders.map(order => (
                         <Card key={order.id}>
                             <CardHeader className="flex flex-row justify-between items-start">
                                 <div>
                                     <CardTitle>Order #{order.id.slice(0, 7)}</CardTitle>
-                                    <CardDescription>{order.createdAt.toLocaleDateString()}</CardDescription>
+                                    <CardDescription>{(order.createdAt as Date).toLocaleDateString()}</CardDescription>
                                 </div>
-                                {/* In a real app, status would come from the order data */}
                                 <Badge variant='secondary'>Processing</Badge>
                             </CardHeader>
                             <CardContent>

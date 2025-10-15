@@ -1,63 +1,77 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { User } from 'firebase/auth';
-import { useUser as useFirebaseUser } from '@/firebase';
-import { Skeleton } from '@/components/ui/skeleton';
 
-// Set admin email from environment variables
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+// Mock User type, simplified from Firebase User
+export interface MockUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL?: string | null;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: MockUser | null;
   isAdmin: boolean;
   loading: boolean;
+  login: (asAdmin?: boolean) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  isAdmin: false,
-  loading: true,
+  isAdmin: true, // Default to admin for frontend-only
+  loading: false,
+  login: () => {},
+  logout: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
+// Mock admin user for frontend-only experience
+const adminUser: MockUser = {
+  uid: 'admin-user-id',
+  email: 'admin@example.com',
+  displayName: 'Admin User',
+};
+
+const regularUser: MockUser = {
+  uid: 'regular-user-id',
+  email: 'user@example.com',
+  displayName: 'Regular User',
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading, userError } = useFirebaseUser();
-  const [isAdmin, setIsAdmin] = useState(false);
+  // For this frontend-only version, we'll default to being logged in as an admin.
+  const [user, setUser] = useState<MockUser | null>(adminUser);
+  const [isAdmin, setIsAdmin] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      // Check if the logged-in user's email matches the admin email
-      setIsAdmin(user.email === ADMIN_EMAIL);
-    } else {
+  const login = (asAdmin = true) => {
+    setLoading(true);
+    setTimeout(() => {
+      if (asAdmin) {
+        setUser(adminUser);
+        setIsAdmin(true);
+      } else {
+        setUser(regularUser);
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    }, 500);
+  };
+
+  const logout = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setUser(null);
       setIsAdmin(false);
-    }
-  }, [user]);
+      setLoading(false);
+    }, 500);
+  };
 
-  if (isUserLoading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-            </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (userError) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <p>Error loading user: {userError.message}</p>
-      </div>
-    )
-  }
-
-  const value = { user, isAdmin, loading: isUserLoading };
+  const value = { user, isAdmin, loading, login, logout };
 
   return (
     <AuthContext.Provider value={value}>

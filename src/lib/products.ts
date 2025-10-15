@@ -1,50 +1,48 @@
-'use client';
+
+"use client";
 
 import type { Product } from './types';
-import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, Firestore, setDoc } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import placeholderImages from './placeholder-images.json';
 
+// Initialize with placeholder data
+let memoryProducts: Product[] = placeholderImages.placeholderImages.map(p => ({
+    id: p.id,
+    name: p.description,
+    price: parseFloat((Math.random() * (20 - 0.5) + 0.5).toFixed(2)),
+    quantity: Math.floor(Math.random() * 100),
+    imageUrl: p.imageUrl,
+    imageHint: p.imageHint,
+}));
 
-// Mock Firestore functions
-export async function getProducts(db: Firestore): Promise<Product[]> {
-    const productsCol = collection(db, 'products');
-    const productSnapshot = await getDocs(productsCol);
-    const productList = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-    return productList;
+// Mock functions to simulate Firestore operations
+export async function getProducts(): Promise<Product[]> {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 50));
+    return [...memoryProducts];
 }
 
-export async function getProductById(db: Firestore, id: string): Promise<Product | null> {
-    const productRef = doc(db, 'products', id);
-    const productSnap = await getDoc(productRef);
-    if (productSnap.exists()) {
-        return { id: productSnap.id, ...productSnap.data() } as Product;
-    } else {
-        return null;
-    }
+export async function getProductById(id: string): Promise<Product | null> {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const product = memoryProducts.find(p => p.id === id);
+    return product ? { ...product } : null;
 }
 
-export function addProduct(db: Firestore, product: Omit<Product, 'id'>) {
-    const newDocRef = doc(collection(db, "products"));
-    const newProduct = { ...product, id: newDocRef.id };
-    
-    setDoc(newDocRef, newProduct)
-      .catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: newDocRef.path,
-          operation: 'create',
-          requestResourceData: newProduct,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-      });
+export async function addProduct(product: Omit<Product, 'id'>): Promise<string> {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const newId = `prod_${Date.now()}`;
+    const newProduct: Product = { ...product, id: newId };
+    memoryProducts.unshift(newProduct);
+    return newId;
 }
 
-export async function updateProduct(db: Firestore, id: string, updates: Partial<Product>): Promise<void> {
-    const productRef = doc(db, 'products', id);
-    await updateDoc(productRef, updates);
+export async function updateProduct(id: string, updates: Partial<Product>): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    memoryProducts = memoryProducts.map(p => 
+        p.id === id ? { ...p, ...updates } : p
+    );
 }
 
-export async function deleteProduct(db: Firestore, id: string): Promise<void> {
-    const productRef = doc(db, 'products', id);
-    await deleteDoc(productRef);
+export async function deleteProduct(id: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    memoryProducts = memoryProducts.filter(p => p.id !== id);
 }

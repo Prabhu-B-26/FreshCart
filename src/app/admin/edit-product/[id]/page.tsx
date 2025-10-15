@@ -1,31 +1,28 @@
+
 "use client";
 
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { getProductById, updateProduct } from '@/lib/products';
 import ProductForm from '@/components/product/product-form';
-import { useAuth } from '@/context/auth-provider';
 import { useEffect, useState } from 'react';
 import type { Product } from '@/lib/types';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFirestore } from '@/firebase';
 
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const { loading: authLoading, user, isAdmin } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const firestore = useFirestore();
 
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
-    if (id && firestore) {
-      getProductById(firestore, id)
+    if (id) {
+      getProductById(id)
         .then(data => {
             if (data) setProduct(data);
             else throw new Error("Product not found");
@@ -36,23 +33,17 @@ export default function EditProductPage() {
         })
         .finally(() => setLoading(false));
     }
-  }, [id, router, toast, firestore]);
+  }, [id, router, toast]);
 
   const handleSubmit = async (data: any) => {
-    if (!firestore) return;
     try {
-      await updateProduct(firestore, id, data);
+      await updateProduct(id, data);
       toast({ title: 'Success', description: 'Product updated successfully.' });
       router.push('/admin');
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update product.' });
     }
   };
-  
-  if (authLoading) return <p>Loading...</p>;
-  if (!user || !isAdmin) {
-      return <p className="text-center p-8">Access Denied. You must be an admin to view this page.</p>;
-  }
   
   if (loading) return <ProductFormSkeleton />;
 

@@ -1,25 +1,29 @@
+
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import type { Product } from '@/lib/types';
+import { getProducts } from '@/lib/products';
 import ProductCard from './product-card';
 import { Input } from '@/components/ui/input';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function ProductList() {
   const [searchTerm, setSearchTerm] = useState('');
-  const firestore = useFirestore();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const productsCollection = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'products');
-  }, [firestore]);
-
-  const { data: products, isLoading } = useCollection<Product>(productsCollection);
+  useEffect(() => {
+    const fetchProducts = async () => {
+        setIsLoading(true);
+        const fetched = await getProducts();
+        setProducts(fetched);
+        setIsLoading(false);
+    }
+    fetchProducts();
+  }, []);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];

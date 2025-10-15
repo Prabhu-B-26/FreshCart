@@ -1,34 +1,26 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { addProduct } from '@/lib/products';
 import ProductForm from '@/components/product/product-form';
-import { useAuth } from '@/context/auth-provider';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useFirestore } from '@/firebase';
 
 export default function AddProductPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { loading, user, isAdmin } = useAuth();
-  const firestore = useFirestore();
 
-  const handleSubmit = (data: any) => {
-    if (!firestore) return;
-    
-    // No try/catch block. Let the global handler catch permission errors.
-    // addProduct is now non-blocking.
-    addProduct(firestore, { ...data, imageHint: data.name.toLowerCase() });
-    toast({ title: 'Success', description: 'Product added successfully.' });
-    router.push('/admin');
+  const handleSubmit = async (data: any) => {
+    try {
+      await addProduct({ ...data, imageHint: data.name.toLowerCase() });
+      toast({ title: 'Success', description: 'Product added successfully.' });
+      router.push('/admin');
+    } catch {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to add product.' });
+    }
   };
-  
-  if (loading) return <p>Loading...</p>
-  if (!user || !isAdmin) {
-      return <p className="text-center p-8">Access Denied. You must be an admin to view this page.</p>
-  }
 
   return (
     <div className="max-w-4xl mx-auto">

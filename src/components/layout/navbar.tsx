@@ -1,14 +1,13 @@
+
 "use client";
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, ShoppingCart, ClipboardList, LogOut, Menu, ShieldCheck } from 'lucide-react';
-import { signOut } from 'firebase/auth';
+import { Home, ShoppingCart, ClipboardList, LogOut, Menu, ShieldCheck, LogIn } from 'lucide-react';
 import React from 'react';
 
-import { useAuth as useAppAuth } from '@/context/auth-provider';
+import { useAuth } from '@/context/auth-provider';
 import { useCart } from '@/context/cart-provider';
-import { useAuth as useFirebaseAuth } from "@/firebase";
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,16 +25,17 @@ import { Skeleton } from '../ui/skeleton';
 
 
 export default function Navbar() {
-  const { user, isAdmin, loading } = useAppAuth();
+  const { user, isAdmin, loading, login, logout } = useAuth();
   const { cartCount } = useCart();
-  const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const auth = useFirebaseAuth();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
+    logout();
   };
+
+  const handleLogin = () => {
+    login(true); // Log in as admin
+  }
 
   const navLinks = [
     { href: '/', label: 'Home', icon: Home, public: true },
@@ -130,8 +130,9 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild size="sm">
-                <Link href="/login">Login</Link>
+              <Button onClick={handleLogin} size="sm">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
               </Button>
             )}
           </div>

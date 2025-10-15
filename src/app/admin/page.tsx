@@ -1,11 +1,10 @@
+
 "use client";
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/auth-provider';
-import { collection, deleteDoc, doc } from 'firebase/firestore';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import type { Product } from '@/lib/types';
+import { getProducts, deleteProduct } from '@/lib/products';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,39 +22,45 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, isAdmin, loading } = useAuth();
-  const firestore = useFirestore();
   const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const productsCollection = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'products');
-  }, [firestore]);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      const fetchedProducts = await getProducts();
+      setProducts(fetchedProducts);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
 
-  const { data: products, isLoading: productsLoading } = useCollection<Product>(productsCollection);
+  const forceRerender = async () => {
+      setLoading(true);
+      const fetchedProducts = await getProducts();
+      setProducts(fetchedProducts);
+      setLoading(false);
+  }
 
   const handleDelete = async (productId: string) => {
-    if (!firestore) return;
     try {
-      await deleteDoc(doc(firestore, 'products', productId));
+      await deleteProduct(productId);
       toast({ title: 'Success', description: 'Product deleted successfully.' });
+      forceRerender(); // Re-fetch products to update the list
     } catch (error) {
       console.error("Error deleting product: ", error);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
     }
   };
 
-  if (loading || productsLoading) {
+  if (loading) {
     return <p>Loading...</p>;
-  }
-
-  if (!user || !isAdmin) {
-    return <p className="text-center p-8">Access Denied. You must be an admin to view this page.</p>;
   }
 
   return (
@@ -141,7 +146,7 @@ export default function AdminDashboard() {
                   </TableRow>
                 )) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center">No products found.</TableCell>
+                    <TableCell colSpan={5} className="text-center">No products found. Add one to get started!</TableCell>
                   </TableRow>
                 )}
               </TableBody>

@@ -1,7 +1,9 @@
+
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth-provider';
+import { getOrderById } from '@/lib/orders';
 import { CheckCircle, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,37 +11,31 @@ import { Separator } from '@/components/ui/separator';
 import type { Order } from '@/lib/types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, Timestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ReceiptPageProps {
   params: { orderId: string };
 }
 
-type OrderWithDate = Omit<Order, 'createdAt'> & {
-    createdAt: Date;
-}
-
 export default function ReceiptPage({ params }: ReceiptPageProps) {
   const { user } = useAuth();
-  const firestore = useFirestore();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const orderRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid, 'orders', params.orderId);
-  }, [user, firestore, params.orderId]);
-
-  const { data: order, isLoading } = useDoc<Order>(orderRef);
-  
-  const typedOrder: OrderWithDate | null = order ? {
-      ...order,
-      createdAt: (order.createdAt as unknown as Timestamp)?.toDate() ?? new Date(),
-  } : null;
-
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (user) {
+        setIsLoading(true);
+        const fetchedOrder = await getOrderById(user.uid, params.orderId);
+        setOrder(fetchedOrder);
+        setIsLoading(false);
+      }
+    };
+    fetchOrder();
+  }, [user, params.orderId]);
 
   const handleDownloadPdf = () => {
-    if (!typedOrder || !user) return;
+    if (!order || !user) return;
     const doc = new jsPDF();
     
     doc.setFont('helvetica', 'bold');
@@ -47,31 +43,31 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(12);
-    doc.text(`Order ID: ${typedOrder.id}`, 20, 30);
+    doc.text(`Order ID: ${order.id}`, 20, 30);
     doc.text(`User: ${user.displayName || user.email}`, 20, 36);
-    doc.text(`Date: ${typedOrder.createdAt.toLocaleString()}`, 20, 42);
+    doc.text(`Date: ${(order.createdAt as Date).toLocaleString()}`, 20, 42);
     
     autoTable(doc, {
         startY: 50,
         head: [['Item', 'Quantity', 'Unit Price', 'Total']],
-        body: typedOrder.items.map(item => [
+        body: order.items.map(item => [
             item.name,
             item.quantity,
             `$${item.price.toFixed(2)}`,
             `$${(item.price * item.quantity).toFixed(2)}`
         ]),
-        foot: [[{content: 'Total', styles: {halign: 'right'}}, '', '', `$${typedOrder.total.toFixed(2)}`]],
+        foot: [[{content: 'Total', styles: {halign: 'right'}}, '', '', `$${order.total.toFixed(2)}`]],
         theme: 'striped'
     });
     
-    doc.save(`GrocerEase-Receipt-${typedOrder.id}.pdf`);
+    doc.save(`GrocerEase-Receipt-${order.id}.pdf`);
   };
 
   if (isLoading) {
     return <ReceiptSkeleton />;
   }
   
-  if (!typedOrder) {
+  if (!order) {
     return <div className="text-center p-8">Order not found.</div>;
   }
 
@@ -84,11 +80,11 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
       <Card className="text-left mt-8">
         <CardHeader>
           <CardTitle>Order Summary</CardTitle>
-          <p className="text-sm text-muted-foreground">Order ID: {typedOrder.id}</p>
+          <p className="text-sm text-muted-foreground">Order ID: {order.id}</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {typedOrder.items.map((item, i) => (
+            {order.items.map((item, i) => (
               <div key={item.id + i} className="flex justify-between items-center">
                 <p>{item.name} <span className="text-muted-foreground">x {item.quantity}</span></p>
                 <p>${(item.price * item.quantity).toFixed(2)}</p>
@@ -97,7 +93,7 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <p>Total Paid</p>
-              <p>${typedOrder.total.toFixed(2)}</p>
+              <p>${order.total.toFixed(2)}</p>
             </div>
           </div>
         </CardContent>
