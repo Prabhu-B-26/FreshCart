@@ -31,4 +31,5 @@ export type Order = {
   items: OrderItem[];
   total: number;
   createdAt: Date;
+  status?: 'Processing' | 'Delivered';
 };

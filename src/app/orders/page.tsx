@@ -3,13 +3,14 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from "@/context/auth-provider";
-import { getOrdersForUser } from '@/lib/orders';
+import { getOrdersForUser, updateOrderStatus } from '@/lib/orders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ClipboardList } from "lucide-react";
 import type { Order } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 export default function OrdersPage() {
     const { user, loading: authLoading } = useAuth();
@@ -24,13 +25,34 @@ export default function OrdersPage() {
                 setOrders(userOrders);
                 setLoading(false);
             } else if (!authLoading) {
-                // If auth is done loading and there's no user, stop loading.
                 setOrders([]);
                 setLoading(false);
             }
         };
         fetchOrders();
     }, [user, authLoading]);
+
+    useEffect(() => {
+        const timers: NodeJS.Timeout[] = [];
+        orders.forEach(order => {
+            if (order.status === 'Processing') {
+                const timer = setTimeout(async () => {
+                    await updateOrderStatus(order.id, 'Delivered');
+                    // Re-fetch orders to reflect the change
+                    if (user) {
+                        const updatedOrders = await getOrdersForUser(user.uid);
+                        setOrders(updatedOrders);
+                    }
+                }, 10000); // 10 seconds
+                timers.push(timer);
+            }
+        });
+
+        // Cleanup timers on component unmount or when orders change
+        return () => {
+            timers.forEach(timer => clearTimeout(timer));
+        };
+    }, [orders, user]);
 
     if (authLoading || loading) {
         return <OrdersSkeleton />;
@@ -52,7 +74,9 @@ export default function OrdersPage() {
                                     <CardTitle>Order #{order.id.slice(0, 7)}</CardTitle>
                                     <CardDescription>{order.createdAt.toLocaleDateString()}</CardDescription>
                                 </div>
-                                <Badge variant='secondary'>Processing</Badge>
+                                <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'} className={cn(order.status === 'Delivered' && 'bg-green-600')}>
+                                    {order.status}
+                                </Badge>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
