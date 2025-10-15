@@ -2,6 +2,9 @@
 
 import type { Product } from './types';
 import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, Firestore, setDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 // Mock Firestore functions
 export async function getProducts(db: Firestore): Promise<Product[]> {
@@ -21,15 +24,19 @@ export async function getProductById(db: Firestore, id: string): Promise<Product
     }
 }
 
-export async function addProduct(db: Firestore, product: Omit<Product, 'id'>): Promise<Product> {
-    // Create a reference to a new document with a unique ID
+export function addProduct(db: Firestore, product: Omit<Product, 'id'>) {
     const newDocRef = doc(collection(db, "products"));
+    const newProduct = { ...product, id: newDocRef.id };
     
-    // Use setDoc to save the product data with the new ID
-    await setDoc(newDocRef, { ...product, id: newDocRef.id });
-
-    // Return the full product object including the new ID
-    return { id: newDoc_docRef.id, ...product };
+    setDoc(newDocRef, newProduct)
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: newDocRef.path,
+          operation: 'create',
+          requestResourceData: newProduct,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
 export async function updateProduct(db: Firestore, id: string, updates: Partial<Product>): Promise<void> {

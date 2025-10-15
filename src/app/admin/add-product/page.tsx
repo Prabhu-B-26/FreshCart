@@ -15,16 +15,14 @@ export default function AddProductPage() {
   const { loading, user, isAdmin } = useAuth();
   const firestore = useFirestore();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = (data: any) => {
     if (!firestore) return;
-    try {
-      await addProduct(firestore, { ...data, imageHint: data.name.toLowerCase() });
-      toast({ title: 'Success', description: 'Product added successfully.' });
-      router.push('/admin');
-    } catch (error) {
-        console.error(error)
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to add product.' });
-    }
+    
+    // No try/catch block. Let the global handler catch permission errors.
+    // addProduct is now non-blocking.
+    addProduct(firestore, { ...data, imageHint: data.name.toLowerCase() });
+    toast({ title: 'Success', description: 'Product added successfully.' });
+    router.push('/admin');
   };
   
   if (loading) return <p>Loading...</p>
