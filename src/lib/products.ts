@@ -1,7 +1,7 @@
 'use client';
 
 import type { Product } from './types';
-import { addDoc, collection, doc, getDoc, getDocs, updateDoc, deleteDoc, Firestore } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, updateDoc, deleteDoc, Firestore, setDoc } from 'firebase/firestore';
 
 // Mock Firestore functions
 export async function getProducts(db: Firestore): Promise<Product[]> {

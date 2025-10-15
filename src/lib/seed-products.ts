@@ -4,7 +4,7 @@
 // As an AI, I am "running" it once to populate your initial data.
 
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, writeBatch } from 'firebase/firestore';
+import { getFirestore, collection, writeBatch, getDocs } from 'firebase/firestore';
 import { firebaseConfig } from '../firebase/config';
 import placeholderImages from './placeholder-images.json';
 
@@ -13,7 +13,7 @@ import placeholderImages from './placeholder-images.json';
 // and likely run this as a separate script, not as part of the app startup.
 // We are "running" this once to get initial data into your Firestore database.
 
-const seedDatabase = async () => {
+export const seedProducts = async () => {
   try {
     console.log('Connecting to Firebase to seed data...');
     // Initialize a temporary Firebase app instance for the script
@@ -21,20 +21,30 @@ const seedDatabase = async () => {
     const db = getFirestore(app);
     console.log('Connection successful.');
 
+    const productsCollectionRef = collection(db, 'products');
+
+    // Check if products already exist
+    const existingProducts = await getDocs(productsCollectionRef);
+    if (!existingProducts.empty) {
+        console.log('Products collection is not empty. Skipping seed.');
+        return;
+    }
+
+
     // Get a new write batch
     const batch = writeBatch(db);
 
-    const productsCollectionRef = collection(db, 'products');
 
     console.log('Preparing batch of products...');
     placeholderImages.placeholderImages.forEach((productData) => {
-      const docRef = productsCollectionRef.doc(productData.id);
+      const docRef = doc(productsCollectionRef, productData.id); // Use the ID from JSON
       const product = {
         name: productData.description,
         price: parseFloat((Math.random() * (20 - 0.5) + 0.5).toFixed(2)),
         quantity: Math.floor(Math.random() * 100),
         imageUrl: productData.imageUrl,
         imageHint: productData.imageHint,
+        id: productData.id // Also store id in the document body
       };
       batch.set(docRef, product);
     });
@@ -49,7 +59,3 @@ const seedDatabase = async () => {
     // We don't want to crash the app if seeding fails, but we log the error.
   }
 };
-
-// Immediately execute the seed function.
-// The AI will "run" this file once.
-seedDatabase();
