@@ -1,7 +1,7 @@
 'use client';
 
 import type { Product } from './types';
-import { addDoc, collection, doc, getDoc, getDocs, updateDoc, deleteDoc, Firestore, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, Firestore, setDoc } from 'firebase/firestore';
 
 // Mock Firestore functions
 export async function getProducts(db: Firestore): Promise<Product[]> {
@@ -22,8 +22,14 @@ export async function getProductById(db: Firestore, id: string): Promise<Product
 }
 
 export async function addProduct(db: Firestore, product: Omit<Product, 'id'>): Promise<Product> {
-    const docRef = await addDoc(collection(db, 'products'), product);
-    return { id: docRef.id, ...product };
+    // Create a reference to a new document with a unique ID
+    const newDocRef = doc(collection(db, "products"));
+    
+    // Use setDoc to save the product data with the new ID
+    await setDoc(newDocRef, { ...product, id: newDocRef.id });
+
+    // Return the full product object including the new ID
+    return { id: newDoc_docRef.id, ...product };
 }
 
 export async function updateProduct(db: Firestore, id: string, updates: Partial<Product>): Promise<void> {

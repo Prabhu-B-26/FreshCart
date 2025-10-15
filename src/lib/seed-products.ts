@@ -4,7 +4,7 @@
 // As an AI, I am "running" it once to populate your initial data.
 
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, writeBatch, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, writeBatch, getDocs, doc } from 'firebase/firestore';
 import { firebaseConfig } from '../firebase/config';
 import placeholderImages from './placeholder-images.json';
 

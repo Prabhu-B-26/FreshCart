@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name is too short."),
   price: z.coerce.number().positive("Price must be a positive number."),
   quantity: z.coerce.number().int().min(0, "Quantity can't be negative."),
-  imageUrl: z.string().url("Must be a valid URL.").optional(),
+  imageUrl: z.string().url("Must be a valid URL."),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -35,7 +35,8 @@ interface ProductFormProps {
 
 export default function ProductForm({ initialData, onSubmit }: ProductFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
+  
+  const defaultImageUrl = initialData?.imageUrl || `https://picsum.photos/seed/${initialData?.name || 'new'}/400/300`;
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
@@ -48,33 +49,17 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
       name: "",
       price: 0,
       quantity: 0,
-      imageUrl: "",
+      imageUrl: defaultImageUrl,
     },
   });
 
+  const imageUrlValue = form.watch("imageUrl");
+
   const handleFormSubmit = async (values: ProductFormValues) => {
     setIsLoading(true);
-    // In a real app, file upload would be handled here.
-    // For this mock, we assume imageUrl is provided or we use a placeholder.
-    const dataToSubmit = {
-        ...values,
-        imageUrl: values.imageUrl || imagePreview || "https://picsum.photos/seed/new-product/400/300",
-    }
-    await onSubmit(dataToSubmit);
+    await onSubmit(values);
     setIsLoading(false);
   };
-  
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if(file){
-          const reader = new FileReader();
-          reader.onloadend = () => {
-              setImagePreview(reader.result as string);
-              // In a real app, you would also prepare to upload the file object
-          };
-          reader.readAsDataURL(file);
-      }
-  }
 
   return (
     <Form {...form}>
@@ -82,23 +67,24 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-1">
                 <FormLabel>Product Image</FormLabel>
-                <div className="mt-2 aspect-square w-full border-2 border-dashed rounded-lg flex items-center justify-center relative">
-                    {imagePreview ? (
-                        <Image src={imagePreview} alt="Product image preview" fill className="object-cover rounded-lg" />
+                <div className="mt-2 aspect-square w-full border-2 border-dashed rounded-lg flex items-center justify-center relative overflow-hidden">
+                    {imageUrlValue ? (
+                        <Image src={imageUrlValue} alt="Product image preview" fill className="object-cover" />
                     ) : (
                         <div className="text-center p-4">
                             <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <p className="mt-2 text-sm text-muted-foreground">Upload an image</p>
+                            <p className="mt-2 text-sm text-muted-foreground">Image preview will appear here</p>
                         </div>
                     )}
-                     <Input id="image-upload" type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageChange} accept="image/*" />
                 </div>
+            </div>
+            <div className="md:col-span-2 space-y-4">
                  <FormField
                     control={form.control}
                     name="imageUrl"
                     render={({ field }) => (
-                        <FormItem className="mt-4">
-                        <FormLabel>Or Image URL</FormLabel>
+                        <FormItem>
+                        <FormLabel>Image URL</FormLabel>
                         <FormControl>
                             <Input placeholder="https://example.com/image.png" {...field} />
                         </FormControl>
@@ -106,8 +92,6 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
                         </FormItem>
                     )}
                 />
-            </div>
-            <div className="md:col-span-2 space-y-4">
                 <FormField
                 control={form.control}
                 name="name"

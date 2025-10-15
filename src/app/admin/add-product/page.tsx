@@ -22,6 +22,7 @@ export default function AddProductPage() {
       toast({ title: 'Success', description: 'Product added successfully.' });
       router.push('/admin');
     } catch (error) {
+        console.error(error)
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to add product.' });
     }
   };
