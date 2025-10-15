@@ -15,7 +15,7 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
-  const { isAdmin, loading: authLoading, user } = useAuth();
+  const { loading: authLoading, user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,8 +47,8 @@ export default function EditProductPage() {
   };
   
   if (authLoading) return <p>Loading...</p>;
-  if (!user || !isAdmin) {
-      return <p className="text-center p-8">Access Denied. You must be an admin to view this page.</p>;
+  if (!user) {
+      return <p className="text-center p-8">Access Denied. You must be logged in to view this page.</p>;
   }
   
   if (loading) return <ProductFormSkeleton />;

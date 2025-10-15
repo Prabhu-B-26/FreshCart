@@ -7,13 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface AuthContextType {
   user: User | null;
-  isAdmin: boolean;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  isAdmin: false,
   loading: true,
 });
 
@@ -21,26 +19,18 @@ export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
-      if (user) {
-        // Simple admin check, replace with a more secure method for production
-        // e.g., custom claims
-        setIsAdmin(user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL);
-      } else {
-        setIsAdmin(false);
-      }
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const value = { user, isAdmin, loading };
+  const value = { user, loading };
 
   if (loading) {
     return (

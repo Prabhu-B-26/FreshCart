@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 export default function AddProductPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { isAdmin, loading, user } = useAuth();
+  const { loading, user } = useAuth();
 
   const handleSubmit = async (data: any) => {
     try {
@@ -24,9 +24,9 @@ export default function AddProductPage() {
   };
   
   if (loading) return <p>Loading...</p>
-  if (!user || !isAdmin) {
+  if (!user) {
       // router.push('/'); // this causes infinite loop
-      return <p className="text-center p-8">Access Denied. You must be an admin to view this page.</p>
+      return <p className="text-center p-8">Access Denied. You must be logged in to view this page.</p>
   }
 
   return (

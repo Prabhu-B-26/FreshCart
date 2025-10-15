@@ -25,7 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export default function Navbar() {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { cartCount } = useCart();
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -38,12 +38,11 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home', icon: Home, public: true },
     { href: '/orders', label: 'Orders', icon: ClipboardList, auth: true },
-    { href: '/admin/add-product', label: 'Add Product', icon: PlusCircle, admin: true },
+    { href: '/admin/add-product', label: 'Add Product', icon: PlusCircle, auth: true },
   ];
 
   const filteredLinks = navLinks.filter(link => {
     if (link.public) return true;
-    if (link.admin) return isAdmin;
     if (link.auth) return !!user;
     return false;
   });
