@@ -34,7 +34,7 @@ export default function ReceiptPage() {
   }, [user, orderId]);
 
   const handleDownloadPdf = () => {
-    if (!order || !user) return;
+    if (!order || !user?.email) return;
     const doc = new jsPDF();
     
     doc.setFont('helvetica', 'bold');
@@ -61,6 +61,10 @@ export default function ReceiptPage() {
     
     doc.save(`GrocerEase-Receipt-${order.id}.pdf`);
   };
+
+  const handlePrint = () => {
+      window.print();
+  }
 
   if (isLoading) {
     return <ReceiptSkeleton />;
@@ -103,7 +107,7 @@ export default function ReceiptPage() {
           <Download className="mr-2 h-4 w-4" />
           Download PDF
         </Button>
-        <Button variant="outline" onClick={() => window.print()}>
+        <Button variant="outline" onClick={handlePrint}>
           <Printer className="mr-2 h-4 w-4" />
           Print Receipt
         </Button>
