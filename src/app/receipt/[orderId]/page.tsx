@@ -21,18 +21,19 @@ export default function ReceiptPage({ params }: ReceiptPageProps) {
   const { user } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { orderId } = params;
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (user) {
+      if (user && orderId) {
         setIsLoading(true);
-        const fetchedOrder = await getOrderById(user.uid, params.orderId);
+        const fetchedOrder = await getOrderById(user.uid, orderId);
         setOrder(fetchedOrder);
         setIsLoading(false);
       }
     };
     fetchOrder();
-  }, [user, params.orderId]);
+  }, [user, orderId]);
 
   const handleDownloadPdf = () => {
     if (!order || !user) return;
