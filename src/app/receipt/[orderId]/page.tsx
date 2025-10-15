@@ -38,7 +38,7 @@ export default function ReceiptPage() {
     const doc = new jsPDF();
     
     doc.setFont('helvetica', 'bold');
-    doc.text('GrocerEase - Order Receipt', 20, 20);
+    doc.text('FreshCart - Order Receipt', 20, 20);
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(12);
@@ -59,7 +59,7 @@ export default function ReceiptPage() {
         theme: 'striped'
     });
     
-    doc.save(`GrocerEase-Receipt-${order.id}.pdf`);
+    doc.save(`FreshCart-Receipt-${order.id}.pdf`);
   };
 
   const handlePrint = () => {

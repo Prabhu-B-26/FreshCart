@@ -35,7 +35,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthLayout title="Create an Account" description="Join GrocerEase to start shopping.">
+    <AuthLayout title="Create an Account" description="Join FreshCart to start shopping.">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField

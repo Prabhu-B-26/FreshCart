@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthLayout title="Welcome Back" description="Log in to your GrocerEase account.">
+    <AuthLayout title="Welcome Back" description="Log in to your FreshCart account.">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField

@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Navbar from '@/components/layout/navbar';
 
 export const metadata: Metadata = {
-  title: 'GrocerEase',
+  title: 'FreshCart',
   description: 'Your friendly neighborhood online grocery store.',
 };
 
