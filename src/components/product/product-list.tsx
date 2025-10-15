@@ -7,6 +7,8 @@ import ProductCard from './product-card';
 import { Input } from '@/components/ui/input';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export default function ProductList() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,7 +55,7 @@ export default function ProductList() {
           type="search"
           placeholder="Search for products..."
           className="w-full max-w-lg pl-10"
-          value={searchTerm}
+          value={searchTerm || ''}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
@@ -72,8 +74,6 @@ export default function ProductList() {
     </div>
   );
 }
-
-import { Skeleton } from "@/components/ui/skeleton";
 
 function SkeletonCard() {
     return (
