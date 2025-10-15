@@ -42,6 +42,7 @@ export default function ProductList() {
                     type="search"
                     placeholder="Search for products..."
                     className="w-full max-w-lg pl-10"
+                    value=""
                     disabled
                   />
               </div>
