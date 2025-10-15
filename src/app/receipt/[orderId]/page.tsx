@@ -12,16 +12,14 @@ import type { Order } from '@/lib/types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useParams } from 'next/navigation';
 
-interface ReceiptPageProps {
-  params: { orderId: string };
-}
-
-export default function ReceiptPage({ params }: ReceiptPageProps) {
+export default function ReceiptPage() {
+  const params = useParams();
+  const orderId = Array.isArray(params.orderId) ? params.orderId[0] : params.orderId;
   const { user } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { orderId } = params;
 
   useEffect(() => {
     const fetchOrder = async () => {
