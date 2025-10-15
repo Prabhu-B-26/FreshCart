@@ -55,7 +55,7 @@ export default function ProductList() {
           type="search"
           placeholder="Search for products..."
           className="w-full max-w-lg pl-10"
-          value={searchTerm || ''}
+          value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
